@@ -77,7 +77,6 @@ from gflow_cli.errors import (
     CONTENT_SAFETY_REASONS,
     ConfigurationError,
     ContentPolicyError,
-    FlowAgentUiError,
     FlowHostMigratedError,
     InsufficientCreditsError,
     MediaUploadRejectedError,
@@ -3185,29 +3184,6 @@ class MigratedComposer:
         return path
 
 
-def _agent_only_not_driven(page: Page) -> FlowAgentUiError:
-    """#799's composer with no driver behind it yet: exit 25, before any submit."""
-    return FlowAgentUiError(
-        detail=(
-            f"migrated host: this account's composer is agent-only — the settings trigger "
-            f"({READY_ANCHOR}) is in the page but hidden, and no agent-mode chip "
-            f"({AGENT_MODE_CHIP_ANY}) exists to turn off, so there is no classic composer to "
-            f"drive on {page.url} (host=migrated). Not selector drift, and not the "
-            f"recoverable agent mode of #749."
-        ),
-        remediation_hint=(
-            "Google has put this account on Flow's agent-only composer, where aspect, model "
-            "and count are Agent-settings defaults rather than per-request controls. "
-            "gflow-cli has no driver for it yet, so no flag or profile change helps and a "
-            "re-run will not either — this is tracked in issue #799. Generating from the "
-            "Flow web UI still works."
-        ),
-        # Not retryable: which composer an account gets is server-assigned per account, so
-        # a retry lands the same page. FlowAgentUiError is retryable by class for the labs A/B.
-        retryable=False,
-    )
-
-
 async def run_video(
     page: Page,
     request: GenerateVideoRequest,
@@ -3248,7 +3224,19 @@ async def run_video(
     log.info("migrated.dispatch", project_id=pid, mode=request.mode.value)
     composer = MigratedComposer()
     if await composer.ensure_editor(page, pid) == "agent_only":
-        raise _agent_only_not_driven(page)
+        from gflow_cli.api.transports.agent_only_composer import (  # noqa: PLC0415 - cycle
+            run_agent_video,
+        )
+
+        return await run_agent_video(
+            page,
+            request,
+            project_id=pid,
+            out_dir=out_dir,
+            poll_timeout_s=poll_timeout_s,
+            download=download,
+            on_started=on_started,
+        )
     await composer.apply_video_settings(page, request)
     media_id: str | None = None
     end_media_id: str | None = None
@@ -3339,7 +3327,11 @@ async def run_images(
         )
     composer = MigratedComposer(out_dir=out_dir)
     if await composer.ensure_editor(page, pid) == "agent_only":
-        raise _agent_only_not_driven(page)
+        from gflow_cli.api.transports.agent_only_composer import (  # noqa: PLC0415 - cycle
+            run_agent_images,
+        )
+
+        return await run_agent_images(page, request, project_id=pid)
     reference_ids: tuple[str, ...] = ()
     if request.refs:
         # Images already in this project (a manifest's `batch:N`, #913): referenced in
