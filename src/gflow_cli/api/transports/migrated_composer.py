@@ -3203,9 +3203,12 @@ async def run_video(
     project is created by ``FlowApiClient`` before this runs (#864), so reaching
     here without one means a caller bypassed the client.
     """
+    from gflow_cli.api.transports import agent_only_composer as agent  # noqa: PLC0415 - cycle
+
     unported = _unported_form(request)
-    if unported is not None:
-        raise FlowHostMigratedError(
+
+    def refuse() -> FlowHostMigratedError:
+        return FlowHostMigratedError(
             detail=(
                 f"Flow served flow.google.com, where gflow drives "
                 f"text-to-video, image-to-video from local start (and end) frames, and "
@@ -3213,6 +3216,10 @@ async def run_video(
                 f"(#639) — pass --initial-frame / --ref as local files"
             ),
         )
+
+    # $0 and before the page only when neither composer takes it (see run_images).
+    if unported is not None and agent._unported_video(request) is not None:  # pyright: ignore[reportPrivateUsage]
+        raise refuse()
     pid = project_id or extract_project_id(page.url)
     if not pid:
         raise ConfigurationError(
@@ -3237,6 +3244,8 @@ async def run_video(
             download=download,
             on_started=on_started,
         )
+    if unported is not None:
+        raise refuse()
     await composer.apply_video_settings(page, request)
     media_id: str | None = None
     end_media_id: str | None = None
@@ -3310,14 +3319,22 @@ async def run_images(
     out_dir: Path | None = None,
 ) -> list[GeneratedImage]:
     """Drive supported image requests through the migrated project composer."""
+    from gflow_cli.api.transports import agent_only_composer as agent  # noqa: PLC0415 - cycle
+
     unported = _unported_image_form(request)
-    if unported is not None:
-        raise FlowHostMigratedError(
+
+    def refuse() -> FlowHostMigratedError:
+        return FlowHostMigratedError(
             detail=(
                 "Flow served flow.google.com, where gflow drives t2i "
                 f"and i2i from local files; {unported} is not ported yet (#639)"
             )
         )
+
+    # $0 and before the page only when NEITHER composer takes it: the agent-only one has
+    # its own limits (#799) — its Agent-settings pane offers 3:4, the classic pane does not.
+    if unported is not None and agent._unported_image(request) is not None:  # pyright: ignore[reportPrivateUsage]
+        raise refuse()
     pid = project_id or extract_project_id(page.url)
     if not pid:
         raise ConfigurationError(
@@ -3327,11 +3344,9 @@ async def run_images(
         )
     composer = MigratedComposer(out_dir=out_dir)
     if await composer.ensure_editor(page, pid) == "agent_only":
-        from gflow_cli.api.transports.agent_only_composer import (  # noqa: PLC0415 - cycle
-            run_agent_images,
-        )
-
-        return await run_agent_images(page, request, project_id=pid)
+        return await agent.run_agent_images(page, request, project_id=pid)
+    if unported is not None:
+        raise refuse()
     reference_ids: tuple[str, ...] = ()
     if request.refs:
         # Images already in this project (a manifest's `batch:N`, #913): referenced in
