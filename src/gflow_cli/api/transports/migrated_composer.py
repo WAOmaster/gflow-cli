@@ -450,10 +450,7 @@ ASPECT_LIGATURE: dict[Aspect, str] = {
     Aspect.LANDSCAPE: "crop_16_9",
     Aspect.PORTRAIT: "crop_9_16",
 }
-#: Ligature per aspect. ``crop_portrait`` (3:4) was measured on #799's agent-only
-#: composer, whose Agent settings offer it; the classic composer's pane has no 3:4 radio,
-#: so :data:`IMAGE_ASPECT_LIGATURE_MEASURED` still leaves it out and the classic path
-#: refuses it.
+#: Ligature per aspect radio in the migrated composer's image settings.
 IMAGE_ASPECT_LIGATURE: dict[ImageAspect, str] = {
     ImageAspect.LANDSCAPE: "crop_16_9",
     ImageAspect.PORTRAIT: "crop_9_16",

@@ -710,8 +710,11 @@ async def test_a_form_only_the_agent_composer_takes_is_not_refused_up_front(
 ) -> None:
     """Live 2026-09-15: `--aspect 3:4` exited 36 before the page was opened, because the
     classic pane has no 3:4 radio. The agent-only pane does, so that refusal belongs to
-    the classic composer only."""
+    the classic composer only. Since v0.82 the classic pane has 3:4 too (#864), so the
+    classic-only refusal is simulated to keep the routing guarded."""
     from gflow_cli.api.transports import migrated_composer as mc
+
+    monkeypatch.setattr(mc, "_unported_image_form", lambda _r: "the 3:4 aspect ratio")
 
     async def agent_only(*_: Any, **__: Any) -> str:
         return "agent_only"
