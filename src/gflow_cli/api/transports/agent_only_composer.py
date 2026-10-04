@@ -213,6 +213,19 @@ def _tile_uuid(tile: dict[str, Any], kind: str) -> str | None:
     return media_id.lower() if _UUID_RE.match(media_id) else None
 
 
+#: A `/asb/` tile src ends in a size spec (measured: `=s512-rw`, a 512-px WebP preview). The
+#: spec survives the redirect to `lh3.google.com/rd-asb/`, Google's image server, where `=s0`
+#: means the original size. The classic composer never needs this: its ogiZ0b reply carries
+#: a signed full-size URL, which the agent-only page never exposes.
+_ASB_SIZE_SPEC_RE = re.compile(r"^(https://[^?#]*/asb/[^?#=]+)=[A-Za-z0-9-]+$")
+
+
+def _full_size_src(src: str) -> str:
+    """The original-size URL for an `/asb/` image src; any other src unchanged."""
+    m = _ASB_SIZE_SPEC_RE.match(src or "")
+    return f"{m.group(1)}=s0" if m else src
+
+
 def _cdn_uuid(src: str, kind: str) -> str | None:
     m = _CDN_MEDIA_RE.match(src or "")
     return m.group(2).lower() if m and m.group(1) == kind else None
@@ -782,7 +795,7 @@ async def run_agent_images(
             prompt=request.prompt,
             model_name_type=request.model.value,
             aspect_ratio=request.aspect.value,
-            fife_url=m.src,
+            fife_url=_full_size_src(m.src),
             dimensions=(m.width, m.height),
         )
         for m in media

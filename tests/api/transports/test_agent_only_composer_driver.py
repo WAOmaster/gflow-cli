@@ -785,3 +785,32 @@ async def test_unported_video_forms_are_refused(changes: dict[str, Any]) -> None
             on_started=None,
         )
     page.locator.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("src", "expected"),
+    [
+        # The measured 2026-10-04 tile src: a 512-px WebP preview -> the original size.
+        (
+            "https://flow.google.com/asb/ANqv_x-Y1=s512-rw",
+            "https://flow.google.com/asb/ANqv_x-Y1=s0",
+        ),
+        (
+            "https://flow.google.com/asb/ANqvTOKEN=w286-h512",
+            "https://flow.google.com/asb/ANqvTOKEN=s0",
+        ),
+        # No size spec, a query string, or a non-/asb/ CDN URL: left alone.
+        ("https://flow.google.com/asb/ANqvTOKEN", "https://flow.google.com/asb/ANqvTOKEN"),
+        (
+            "https://flow.google.com/asb/ANqvTOKEN=s512?x=1",
+            "https://flow.google.com/asb/ANqvTOKEN=s512?x=1",
+        ),
+        (
+            "https://flow-content.google/image/0f0e0d0c-0b0a-0908-0706-050403020100?Expires=1",
+            "https://flow-content.google/image/0f0e0d0c-0b0a-0908-0706-050403020100?Expires=1",
+        ),
+        ("", ""),
+    ],
+)
+def test_full_size_src_asks_asb_for_the_original_size(src: str, expected: str) -> None:
+    assert aoc._full_size_src(src) == expected  # pyright: ignore[reportPrivateUsage]
