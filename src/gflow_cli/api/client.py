@@ -3644,7 +3644,8 @@ def _validate_fife_url(url: str) -> None:
         msg = f"Refusing non-HTTPS download URL: scheme={parts.scheme!r}"
         raise ValueError(msg)
     host = parts.hostname or ""
-    if not (host == "flow-content.google" or host.endswith(".google")):
+    # flow.google.com: agent-only image tiles serve from an opaque /asb/ URL there (2026-10-04).
+    if not (host == "flow-content.google" or host.endswith(".google") or host == "flow.google.com"):
         msg = f"Refusing download from unexpected host: {host!r}"
         raise ValueError(msg)
 

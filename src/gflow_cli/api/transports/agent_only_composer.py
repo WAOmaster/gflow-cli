@@ -133,6 +133,7 @@ _TILES_JS = r"""
     tile: t.tagName.toLowerCase(),
     poster: img ? (img.currentSrc || img.src || '') : '',
     video: vid ? (vid.currentSrc || vid.src || '') : '',
+    id: img ? (img.dataset.mediaId || '') : '',
     w: img ? img.naturalWidth : 0, h: img ? img.naturalHeight : 0,
   }];
 })
@@ -197,6 +198,19 @@ def compose_image_directive(prompt: str, count: int, aspect_label: str) -> str:
 def compose_video_directive(prompt: str, duration: int | None, aspect_label: str) -> str:
     length = f"{duration} second " if duration else ""
     return f"Make me a {length}video of {prompt} in a {aspect_label} aspect ratio."
+
+
+#: Measured 2026-10-04: image tiles now load from an opaque `flow.google.com/asb/...` URL and
+#: carry the media id on the `<img data-media-id>` attribute instead of in the src.
+_UUID_RE = re.compile(r"^[0-9a-fA-F-]{36}$")
+
+
+def _tile_uuid(tile: dict[str, Any], kind: str) -> str | None:
+    uuid = _cdn_uuid(tile.get("poster", ""), kind)
+    if uuid:
+        return uuid
+    media_id = tile.get("id") or ""
+    return media_id.lower() if _UUID_RE.match(media_id) else None
 
 
 def _cdn_uuid(src: str, kind: str) -> str | None:
@@ -425,7 +439,7 @@ class AgentOnlyComposer:
         """Finished images on the grid, by uuid (a tile and its chat twin share one)."""
         found: dict[str, TileMedia] = {}
         for tile in await page.evaluate(_TILES_JS):
-            uuid = _cdn_uuid(tile["poster"], "image") if tile["tile"] == "flow-image-tile" else None
+            uuid = _tile_uuid(tile, "image") if tile["tile"] == "flow-image-tile" else None
             if uuid:
                 found.setdefault(
                     uuid, TileMedia(uuid, tile["poster"], int(tile["w"]), int(tile["h"]))
@@ -452,6 +466,8 @@ class AgentOnlyComposer:
                 m = _CDN_MEDIA_RE.match(src or "")
                 if m:
                     uuids.add(m.group(2).lower())
+            if _UUID_RE.match(tile.get("id") or ""):
+                uuids.add(tile["id"].lower())
         return uuids
 
     async def _last_reply(self, page: Page) -> str:
