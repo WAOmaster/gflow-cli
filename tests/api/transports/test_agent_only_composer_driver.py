@@ -279,8 +279,10 @@ async def test_a_second_gate_stops_the_run_after_one_approval(page: Page) -> Non
 @pytest.mark.asyncio
 async def test_a_pending_tile_is_not_a_finished_video_even_with_a_chat_poster(page: Page) -> None:
     await _load(page, kind="video", posterOnly=True, optionEarly=True)
-    with pytest.raises(TransportTimeoutError):
+    with pytest.raises(TransportTimeoutError) as exc_info:
         await aoc.AgentOnlyComposer().generate(page, "x", kind="video", count=1, budget_s=1.5)
+    # The request was submitted: a blind retry would bill a second clip.
+    assert is_retryable(exc_info.value) is False
 
 
 @pytest.mark.asyncio

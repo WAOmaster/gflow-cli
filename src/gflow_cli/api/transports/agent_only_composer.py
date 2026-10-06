@@ -559,6 +559,7 @@ class AgentOnlyComposer:
                         f"agent-only composer: no finished {kind} within {budget_s:.0f}s of "
                         f"submit (approvals={approvals})"
                     ),
+                    retryable=False,
                     remediation_hint=(
                         "The generation may still finish in Flow — check the project before "
                         "re-running, because a re-run submits again (a video spends credits "
