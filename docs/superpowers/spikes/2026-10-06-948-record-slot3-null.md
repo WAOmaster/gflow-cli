@@ -50,4 +50,14 @@ the lost marker.
 **The i2v and r2v submits are a separate question.** `eb1hJf` (i2v) and `MZZa6b` (r2v)
 share `generation_record`, but sharing a parser does not show their reply carries a full
 record. The reporters' captures show only the r2v accept envelope (truncated) and the i2v
-`as29s` record, not either submit's record.
+`as29s` record, not either submit's record. **Settled by running them:** after the fix, the
+i2v e2e (asserting `submit_observed rpc == eb1hJf`) and the r2v e2e both passed with an
+mp4 on disk.
+
+**The recover path, and the listing trap.** Once records were selected by media id, the
+`data download` e2e failed with HTTP 302. A probe showed why: the project load's `Zzl0ze`
+listing carries this clip's record too, and its URL is an **unsigned
+`lh3.googleusercontent.com`** link that redirects, while `as29s` carries the signed
+`flow-content.google` URL. Before, first-match picked another clip's record from the
+listing and skipped the frame, which hid the trap by accident. `_collect` now reads only
+`as29s`; the same e2e then passed.

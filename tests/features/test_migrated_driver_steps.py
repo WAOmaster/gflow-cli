@@ -94,6 +94,17 @@ def _null_slot_3(world: dict[str, Any]) -> None:
     ]
 
 
+@given("the status poll lists another clip's finished record before this run's")
+def _other_clip_first(world: dict[str, Any]) -> None:
+    other = _record(3, "https://flow-content.google/video/other?Signature=o")
+    other[0] = "99999999-9999-4999-8999-999999999999"
+    other[2] = "88888888-8888-4888-8888-888888888888"
+    world["page"].scripted_responses[1] = (
+        _batch_url("jwpduf"),
+        _frame("jwpduf", [None, 881, [[other], [_record(2)]]]),
+    )
+
+
 @given("GFLOW_CLI_FLOW_HOST is labs.google")
 def _kill_switch(world: dict[str, Any]) -> None:
     world["set_flow_host"]("labs.google")

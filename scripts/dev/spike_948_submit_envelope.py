@@ -29,7 +29,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import re
 import sys
 import time
 from pathlib import Path
@@ -40,6 +39,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _spike_common import build_client, default_out_path, resolve_profile_dir, step  # noqa: E402, isort: skip
 
 from gflow_cli.api.transports.batchexecute import (  # noqa: E402
+    _UUID_RE,  # pyright: ignore[reportPrivateUsage]
     _is_record,  # pyright: ignore[reportPrivateUsage]
     _walk_lists,  # pyright: ignore[reportPrivateUsage]
     generation_record,
@@ -49,7 +49,7 @@ from gflow_cli.api.transports.migrated_composer import STATUS_RPCS, SUBMIT_RPCS 
 from gflow_cli.api.video import GenerateVideoRequest, Mode, VideoModel  # noqa: E402
 from gflow_cli.data.redaction import redact_error_detail  # noqa: E402
 
-_UUID = re.compile(r"^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$")
+_UUID = _UUID_RE
 _KEEP = {"CAE"}
 
 

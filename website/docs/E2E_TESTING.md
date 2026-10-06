@@ -593,8 +593,8 @@ GFLOW_CLI_E2E_PROFILE=<profile> GFLOW_CLI_E2E_PROJECT=<project-uuid> \
 
 `GFLOW_CLI_E2E_FLOW_HOST` overrides the routing for the paid test (e.g.
 `flow.google.com` to force it). `GFLOW_CLI_E2E_VIDEO_DURATION` is honoured when set,
-but on the migrated t2v and i2v tests an unset value sends **no** duration, so Flow picks
-its default length. Cohorts whose settings pane shows no duration row for the default model
+but on the migrated t2v and i2v tests an unset value sends **no** duration, so the editor
+keeps the length it currently holds. Cohorts whose settings pane shows no duration row for the default model
 refuse a forced length with a $0 exit 11 (#650, #948).
 
 ## See also

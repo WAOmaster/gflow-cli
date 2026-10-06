@@ -24,8 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   flow.google.com reply can carry several generation records; the project-load reply
   carries one per clip. gflow decoded only the first, then discarded the whole frame if
   that record was another clip's. It now selects the record by its own workflow id
-  during a run, or its media id in `gflow data download`. Whether this caused the one
-  unexplained post-submit timeout seen while fixing #948 was not measured.
+  during a run, or its media id in `gflow data download`. `data download` now reads only
+  the clip route's `as29s` reply. The project listing carries the same clip's record with an
+  unsigned link that answers HTTP 302 (measured). Whether the multi-record case caused the
+  one unexplained post-submit timeout seen while fixing #948 was not measured.
 
 ## [0.82.1] — 2026-10-02
 

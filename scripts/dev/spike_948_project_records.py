@@ -21,7 +21,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -31,12 +30,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _spike_common import build_client, resolve_profile_dir, step  # noqa: E402, isort: skip
 
 from gflow_cli.api.transports.batchexecute import (  # noqa: E402
+    _UUID_RE,  # pyright: ignore[reportPrivateUsage]
     _is_record,  # pyright: ignore[reportPrivateUsage]
     _walk_lists,  # pyright: ignore[reportPrivateUsage]
     parse_frames,
 )
 
-_UUID = re.compile(r"^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$")
+_UUID = _UUID_RE
 
 
 def skeleton(node: Any, labels: dict[str, str]) -> Any:
@@ -68,7 +68,7 @@ async def _main(profile: str, project: str, workflow: str, wait_s: float) -> int
             seen.append(rid)
             for node in _walk_lists(payload):
                 if workflow.lower() in [x.lower() for x in node if isinstance(x, str)]:
-                    if _is_record(node) and isinstance(node[2], str):
+                    if _is_record(node):
                         media["id"] = node[2]
                     hits.append((rid, _is_record(node), skeleton(node, labels)))
 

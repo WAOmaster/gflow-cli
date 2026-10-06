@@ -11,14 +11,14 @@ Three rpcids matter for a generation (spike 2026-09-05-migrated-host-wire-protoc
 * ``jwpduf`` — the app's own 5 s status poll; ``[null, N, [[record]]]``
 * ``as29s`` — the result; the bare record, now carrying signed CDN URLs
 
-The record itself is ``[workflow_id, project_id, media_id, "CAE", null, DETAILS, null,
-MEDIA_INFO]`` (slot 3 is ``null`` since 2026-10, #948) and is located **by that shape**,
-not by position, so a wrapper change
-does not break the parser. ``DETAILS[8]`` is ``[status]`` (6 submitted, 2 running,
-3 done), ``DETAILS[10]`` the signed **poster** (JPEG) URL once done, ``DETAILS[13]``
-the mp4 byte size; ``MEDIA_INFO[0][8]`` the signed **video** URL (``MEDIA_INFO[0][12]`` carries
-the model key, e.g. ``abra_t2v_8s`` — model and duration in one string — which the
-driver does not need). Which URL is which was settled by downloading both on 2026-09-05:
+The record itself is ``[workflow_id, project_id, media_id, <marker>, null, DETAILS, null,
+MEDIA_INFO]`` (the marker was ``"CAE"``, ``null`` since 2026-10, #948) and is located **by
+that shape**, not by position, so a wrapper change does not break the parser.
+``DETAILS[8]`` is ``[status]`` (6 submitted, 2 running, 3 done), ``DETAILS[10]`` the
+signed **poster** (JPEG) URL once done, ``DETAILS[13]`` the mp4 byte size;
+``MEDIA_INFO[0][8]`` the signed **video** URL (``MEDIA_INFO[0][12]`` carries the model
+key, e.g. ``abra_t2v_8s`` — model and duration in one string — which the driver does
+not need). Which URL is which was settled by downloading both on 2026-09-05:
 ``DETAILS[10]`` came back as a 37 KB JPEG; the record's byte size matched the other.
 """
 
@@ -74,7 +74,7 @@ class ImageGenerationRecord:
 
     Image generation is synchronous at this RPC boundary: the measured response arrives
     after the render and already carries its signed CDN URL. It is deliberately distinct
-    from :class:`GenerationRecord`; image records do not use the video ``CAE`` shape.
+    from :class:`GenerationRecord`; image records do not use the video record shape.
     """
 
     media_id: str
@@ -254,9 +254,9 @@ def generation_record(
     record-shaped list exists — the migrated backend changed its envelope.
     """
     want: tuple[int, str] | None = None
-    if workflow_id:
+    if workflow_id is not None:
         want = (0, workflow_id)
-    elif media_id:
+    elif media_id is not None:
         want = (2, media_id)
     rec = _find_record(payload, want)
     if rec is None:
