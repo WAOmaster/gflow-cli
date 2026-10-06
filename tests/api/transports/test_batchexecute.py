@@ -204,6 +204,19 @@ def test_record_with_null_marker_is_still_a_record_948() -> None:
     assert generation_record("jwpduf", [rec]).media_id == MEDIA
 
 
+def test_a_wanted_id_skips_another_clips_record_listed_first() -> None:
+    """A project-wide poll can list another clip first; first-match hid ours (#948 timeout)."""
+    from gflow_cli.api.transports.batchexecute import generation_record
+
+    other = _record(2)
+    other[0] = "99999999-9999-4999-8999-999999999999"
+    other[2] = "88888888-8888-4888-8888-888888888888"
+    payload = [None, None, [[other], [_record(3)]]]
+    assert generation_record("jwpduf", payload, workflow_id=WF).status == 3
+    assert generation_record("as29s", payload, media_id=MEDIA).workflow_id == WF
+    assert generation_record("jwpduf", payload).workflow_id == other[0]  # no filter: first
+
+
 def test_missing_record_warns_that_the_submit_may_be_billed_948() -> None:
     """A blind retry of a billed submit bills twice; the remediation must not invite it."""
     from gflow_cli.api.transports.batchexecute import generation_record

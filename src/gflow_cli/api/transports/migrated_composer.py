@@ -2720,10 +2720,8 @@ class MigratedComposer:
                     _settle(rec)
                 elif rid in STATUS_RPCS and workflow:
                     try:
-                        rec = generation_record(rid, payload)
+                        rec = generation_record(rid, payload, workflow_id=workflow["id"])
                     except WireFormatError:
-                        continue
-                    if rec.workflow_id != workflow["id"]:
                         continue
                     log.info("migrated.status", rpc=rid, status=rec.status, bytes=rec.size_bytes)
                     _settle(rec)

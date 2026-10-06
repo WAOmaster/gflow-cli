@@ -194,14 +194,16 @@ def _is_record(node: list[Any]) -> bool:
     return all(isinstance(node[i], str) and _UUID_RE.match(node[i]) for i in (0, 1, 2))
 
 
-def _find_record(node: object) -> list[Any] | None:
+def _find_record(node: object, want: tuple[int, str] | None = None) -> list[Any] | None:
+    """First record-shaped list, depth-first; with ``want=(slot, id)``, the first whose
+    id slot matches — a project-wide reply can list another clip's record first."""
     items = _as_list(node)
     if items is None:
         return None
-    if _is_record(items):
+    if _is_record(items) and (want is None or items[want[0]] == want[1]):
         return items
     for child in items:
-        found = _find_record(child)
+        found = _find_record(child, want)
         if found is not None:
             return found
     return None
@@ -236,13 +238,23 @@ def _discovery_head(payload: Any) -> str:
     return redact_error_detail(_TOKEN_RE.sub("<token>", head))
 
 
-def generation_record(rpcid: str, payload: Any) -> GenerationRecord:
+def generation_record(
+    rpcid: str,
+    payload: Any,
+    *,
+    workflow_id: str | None = None,
+    media_id: str | None = None,
+) -> GenerationRecord:
     """Locate and decode the generation record inside one frame's payload.
+
+    Pass ``workflow_id`` or ``media_id`` to pick that clip's record out of a reply that
+    lists several; without one, the first record wins (right for a submit reply).
 
     Raises :class:`WireFormatError` (with a redacted discovery head) when no
     record-shaped list exists — the migrated backend changed its envelope.
     """
-    rec = _find_record(payload)
+    want = (0, workflow_id) if workflow_id else (2, media_id) if media_id else None
+    rec = _find_record(payload, want)
     if rec is None:
         raise WireFormatError(
             detail=(

@@ -18,7 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   clips. Records are now matched by their three ids and their details block, whatever
   slot 3 holds. Measured on our own account, the submit (`YhhmEf`) and status (`jwpduf`)
   replies are otherwise unchanged. If the record is still missing, the error now says
-  the run may already be billed, instead of suggesting a retry.
+  the run may already be billed, instead of suggesting a retry. Re-run after the fix on
+  t2v (`YhhmEf`), i2v (`eb1hJf`) and r2v: each ended in a downloaded mp4.
+- **gflow picks its own clip's record out of a reply that lists several.** A
+  flow.google.com reply can carry several generation records; the project-load reply
+  carries one per clip. gflow decoded only the first, then discarded the whole frame if
+  that record was another clip's. It now selects the record by its own workflow id
+  during a run, or its media id in `gflow data download`. Whether this caused the one
+  unexplained post-submit timeout seen while fixing #948 was not measured.
 
 ## [0.82.1] — 2026-10-02
 

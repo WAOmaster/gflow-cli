@@ -25,9 +25,10 @@ jwpduf [null, null, [["<uuid>", "<uuid>", "<uuid>", null, null, [[ts], "<str>", 
 
 **Reading.** The pre-registered first row held: the issue reproduces, and the envelope is
 measured. A separate accept-envelope parser (one reporter's second change) is not needed,
-because the full record is still in the reply. The fix is to `_is_record`
-(`api/transports/batchexecute.py`). It now accepts `"CAE"` or `null` at slot 3 and requires
-the DETAILS list at slot 5 in place of the lost marker.
+because the full record is still in the `YhhmEf` reply. The fix is to `_is_record`
+(`api/transports/batchexecute.py`). It ignores slot 3 entirely, because a marker that moved
+once can move again after billing, and it requires the DETAILS list at slot 5 in place of
+the lost marker.
 
 **Follow-up runs with the fix, same day.**
 
@@ -46,8 +47,7 @@ the DETAILS list at slot 5 in place of the lost marker.
   **unmeasured**. If it recurs, capture the status rpcs with
   `spike_948_submit_envelope.py`.
 
-**Not measured, originally.** `as29s` (now measured above). The run failed at submit, so the clip route was never opened.
-The reporter's description (null at slot 3, the rest unchanged) is consistent with
-`jwpduf`, and the e2e run after the fix exercises it. Also not measured: `MZZa6b` and
-`eb1hJf` on our account. They share `generation_record`, and the reporters' captures show
-the same shape.
+**The i2v and r2v submits are a separate question.** `eb1hJf` (i2v) and `MZZa6b` (r2v)
+share `generation_record`, but sharing a parser does not show their reply carries a full
+record. The reporters' captures show only the r2v accept envelope (truncated) and the i2v
+`as29s` record, not either submit's record.

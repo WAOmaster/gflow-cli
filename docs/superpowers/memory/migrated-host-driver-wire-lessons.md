@@ -13,6 +13,12 @@ cost a real run to learn; each is now a unit test in `tests/api/transports/`.
   **poster JPEG** signed URL and `MEDIA_INFO[0][8]` is the **mp4** — the first build
   had them swapped and downloaded a 37 KB JPEG named `.mp4`. `download()` now checks
   `ftyp` at offset 4 and falls back to the other URL; never trust the slot alone.
+- **A wire marker is not an identity (#948):** slot 3 of that record was `"CAE"` until
+  Flow started sending `null` (measured 2026-10-06 on `YhhmEf` + `jwpduf` + `as29s`), and the
+  parser keyed on it, so every billed submit exited 7 and never downloaded. Identify the
+  record by structure (three UUIDs plus the DETAILS list at slot 5), never by a literal.
+  And a parse failure after a billed submit must never suggest a retry: the remediation
+  says to open the project first, because a blind resubmit bills twice.
 - **Status 3 arrives before the URL:** the app's `jwpduf` poll reports 3 first; the
   record with the signed URLs (`as29s`) follows 2–8 s later. Treating the first 3 as
   terminal loses the URL — wait a grace (20 s) for the URL-carrying record.
