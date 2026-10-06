@@ -253,7 +253,11 @@ def generation_record(
     Raises :class:`WireFormatError` (with a redacted discovery head) when no
     record-shaped list exists — the migrated backend changed its envelope.
     """
-    want = (0, workflow_id) if workflow_id else (2, media_id) if media_id else None
+    want: tuple[int, str] | None = None
+    if workflow_id:
+        want = (0, workflow_id)
+    elif media_id:
+        want = (2, media_id)
     rec = _find_record(payload, want)
     if rec is None:
         raise WireFormatError(
