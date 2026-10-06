@@ -70,7 +70,11 @@ function setSubmit(inFlight) {
 }
 function tile(kind, n) {
   const t = document.createElement(kind === 'image' ? 'flow-image-tile' : 'flow-video-tile');
-  t.innerHTML = `<img src="${cdn('image', n)}">`;
+  // Measured 2026-10-04: image tiles load an opaque `/asb/` 512-px preview and carry the
+  // media id on `<img data-media-id>` instead of in the src.
+  t.innerHTML = S.asbImages
+    ? `<img src="https://flow.google.com/asb/opaque-${n}=s512-rw" data-media-id="${uid(n)}">`
+    : `<img src="${cdn('image', n)}">`;
   document.getElementById('grid').prepend(t);  // newest first, as measured
   if (S.dupe) {
     const o = document.createElement('flow-a2ui-image-option');
@@ -322,6 +326,24 @@ async def test_duplicates_and_pre_existing_media_are_not_results(page: Page) -> 
     uuids = [m.uuid for m in media]
     assert len(uuids) == 2 == len(set(uuids))
     assert "00000000-0000-4000-8000-000000000001" not in uuids
+
+
+@pytest.mark.asyncio
+async def test_an_opaque_asb_image_is_named_by_its_data_media_id_and_fetched_full_size(
+    page: Page, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The src names no uuid: the id comes from `data-media-id`, the pre-existing tile is in
+    the baseline by that same id, and the download URL asks for the original size."""
+    from gflow_cli.config import reset_settings
+
+    monkeypatch.setenv("GFLOW_CLI_AGENT_CONFIRM", "account")
+    reset_settings()
+    await _load(page, kind="image", asbImages=True, preMedia=True)
+    (image,) = await aoc.run_agent_images(
+        page, image_api.GenerateImageRequest(prompt="x"), project_id="p1"
+    )
+    assert image.media_name == "00000000-0000-4000-8000-000000000100"
+    assert image.fife_url == "https://flow.google.com/asb/opaque-100=s0"
 
 
 @pytest.mark.asyncio
