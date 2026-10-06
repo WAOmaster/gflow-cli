@@ -1353,8 +1353,9 @@ without approving a second. Live-verified 2026-09-15 on a Google AI Pro account 
 t2i 3:4 × 2 (896×1200 each), t2v 4 s 9:16 (ready 69 s after submit, MP4 downloaded).
 
 **Not driven yet on this composer** (exit 36, before anything is clicked): image-to-image,
-image-to-video, reference-to-video, character references, Agent instructions, and more than
-one video per request.
+image-to-video, reference-to-video, character references, Agent instructions, an explicit
+video `--resolution` (the Agent settings pane has no resolution control), and more than one
+video per request.
 
 **Rough edges, measured:**
 - A run that dies between Save and restore can leave the account on the run's defaults; the
