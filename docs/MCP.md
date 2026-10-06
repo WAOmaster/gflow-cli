@@ -155,8 +155,10 @@ doomed and costs ~35 s each ([#756](https://github.com/ffroliva/gflow-cli/issues
 second is the migrated **agent-only composer** ([#799](https://github.com/ffroliva/gflow-cli/issues/799)),
 which gflow drives through its chat agent: there `FlowAgentUiError` carries `retryable: false`
 because it means the agent did something other than what was asked — a second credit
-confirmation, more results than requested, or a turn that made nothing — and a blind re-run
-repeats the ask. The
+confirmation, more results than requested, or an image turn that made nothing (a video turn
+that makes nothing ends in `TransportTimeoutError`, also `retryable: false` there, since the
+request was already sent) — and a blind re-run repeats the ask. Its `detail` may include the
+agent's last reply. The
 *cause*, and whether it ever clears, remain unmeasured. The override also runs the other
 way: a reCAPTCHA mint failure (`type` `…/errors/recaptcha-mint`, exit 1, no request sent,
 no credit spent) is `retryable: true` when a navigation raced the mint or the page was a

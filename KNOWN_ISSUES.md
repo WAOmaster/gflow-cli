@@ -1360,8 +1360,10 @@ one video per request.
 - A run that dies between Save and restore can leave the account on the run's defaults; the
   `migrated.agent_only.defaults_restore_failed` log line names the originals.
 - Editing Agent settings in the browser *during* a run is overwritten by the restore.
-- Finished grid tiles re-render to opaque `/asb/` media with no media id; the id comes from
-  the agent's reply instead, and the clip is fetched from the tile's hover player.
+- Finished **video** tiles re-render to opaque `/asb/` media with no media id; the id comes
+  from the agent's reply instead, and the clip is fetched from the tile's hover player.
+  **Image** tiles also load an opaque `/asb/` src (a 512-px preview) but carry the media id on
+  `img[data-media-id]`; gflow downloads the original size by rewriting the size spec to `=s0`.
 - The request text is English. Whether the agent honours it on a non-English account is
   unmeasured (the original reporter's account is `ru`).
 

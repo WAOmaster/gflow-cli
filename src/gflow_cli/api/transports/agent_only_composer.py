@@ -18,8 +18,9 @@ Shape of a run:
    without approving it.
 4. Completion is observed in the **DOM**, not on the wire: this composer never fires the
    classic ``ogiZ0b`` image reply, and ``as29s`` records name uuids absent from the page.
-   An image is a grid tile whose ``flow-content.google/image/<uuid>`` was not in the
-   pre-submit baseline. A video is ready when no ``flow-pending-tile`` is left, the newest
+   An image is a grid tile whose media id (``img[data-media-id]``; the src is an opaque
+   ``flow.google.com/asb/...`` 512-px preview, fetched at original size via ``=s0``) was not
+   in the pre-submit baseline. A video is ready when no ``flow-pending-tile`` is left, the newest
    finished tile has changed, and a new uuid is named by that tile or by the chat reply's
    poster — the tile's own media may be opaque ``/asb/`` (no uuid), and its ``<video>``
    then mounts only on hover.
