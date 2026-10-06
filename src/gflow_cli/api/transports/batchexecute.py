@@ -12,7 +12,8 @@ Three rpcids matter for a generation (spike 2026-09-05-migrated-host-wire-protoc
 * ``as29s`` — the result; the bare record, now carrying signed CDN URLs
 
 The record itself is ``[workflow_id, project_id, media_id, "CAE", null, DETAILS, null,
-MEDIA_INFO]`` and is located **by that shape**, not by position, so a wrapper change
+MEDIA_INFO]`` (slot 3 is ``null`` since 2026-10, #948) and is located **by that shape**,
+not by position, so a wrapper change
 does not break the parser. ``DETAILS[8]`` is ``[status]`` (6 submitted, 2 running,
 3 done), ``DETAILS[10]`` the signed **poster** (JPEG) URL once done, ``DETAILS[13]``
 the mp4 byte size; ``MEDIA_INFO[0][8]`` the signed **video** URL (``MEDIA_INFO[0][12]`` carries
@@ -185,7 +186,10 @@ def rpc_errors(text: str) -> list[RpcError]:
 
 
 def _is_record(node: list[Any]) -> bool:
-    if len(node) < 6 or node[3] != "CAE":
+    # Slot 3 is deliberately unchecked: it was "CAE" until Flow started sending null there
+    # (#948, measured 2026-10-06 on YhhmEf + jwpduf), and a marker that moved once can move
+    # again — after billing. Three UUIDs plus the DETAILS list at slot 5 identify a record.
+    if len(node) < 6 or not isinstance(node[5], list):
         return False
     return all(isinstance(node[i], str) and _UUID_RE.match(node[i]) for i in (0, 1, 2))
 
@@ -243,7 +247,13 @@ def generation_record(rpcid: str, payload: Any) -> GenerationRecord:
         raise WireFormatError(
             detail=(
                 f"batchexecute {rpcid}: no generation record "
-                f"([uuid, uuid, uuid, 'CAE', …]) in the reply"
+                f"([uuid, uuid, uuid, _, _, [details…], …]) in the reply"
+            ),
+            # #948: the reporters' runs that ended here were each accepted and billed.
+            remediation_hint=(
+                "Flow may already have accepted and billed this generation. Open the "
+                "project in Flow before re-running: a blind resubmit can bill twice. File "
+                "a bug at https://github.com/ffroliva/gflow-cli/issues with this error."
             ),
             route=f"batchexecute:{rpcid}",
             discovery={"rpcid": rpcid, "payload_head": _discovery_head(payload)},

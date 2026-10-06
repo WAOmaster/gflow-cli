@@ -190,6 +190,30 @@ def test_record_matches_by_shape_not_position() -> None:
     assert rec.workflow_id == WF and rec.is_running
 
 
+def test_record_with_null_marker_is_still_a_record_948() -> None:
+    """Measured 2026-10-06: Flow now sends null where "CAE" was, on submit and status."""
+    from gflow_cli.api.transports.batchexecute import generation_record
+
+    rec = _record(2)
+    rec[3] = None
+    decoy = [WF, PROJ, MEDIA, None, None, "not details"]  # three uuids, no DETAILS list
+    parsed = generation_record("jwpduf", [None, None, [[decoy], [rec]]])
+    assert (parsed.workflow_id, parsed.media_id, parsed.status) == (WF, MEDIA, 2)
+
+    rec[3] = "CAF"  # the marker's next value must not strand a billed run either
+    assert generation_record("jwpduf", [rec]).media_id == MEDIA
+
+
+def test_missing_record_warns_that_the_submit_may_be_billed_948() -> None:
+    """A blind retry of a billed submit bills twice; the remediation must not invite it."""
+    from gflow_cli.api.transports.batchexecute import generation_record
+
+    with pytest.raises(WireFormatError) as exc_info:
+        generation_record("YhhmEf", [None, 881, [[MEDIA, None, None, ["t"], PROJ]]])
+    hint = exc_info.value.remediation_hint
+    assert "billed" in hint and "simpler prompt" not in hint
+
+
 # --- error envelopes: a refusal is a frame with a null payload -----------------------
 #
 # Captured 2026-09-27 on ``ogiZ0b`` with a tampered reCAPTCHA token (spike

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **flow.google.com video runs no longer fail after Flow has billed them (#948).** Since
+  about 2026-10-05, Flow sends `null` in the generation record's fourth slot, where it
+  used to send `"CAE"`. gflow located the record by that marker. As a result,
+  migrated-host video submits (reported on t2v, i2v and r2v, and reproduced on t2v) were
+  accepted and billed, but then exited 7 with `no generation record` and never
+  downloaded. The same marker also stopped `gflow data download` from recovering those
+  clips. Records are now matched by their three ids and their details block, whatever
+  slot 3 holds. Measured on our own account, the submit (`YhhmEf`) and status (`jwpduf`)
+  replies are otherwise unchanged. If the record is still missing, the error now says
+  the run may already be billed, instead of suggesting a retry.
+
 ## [0.82.1] — 2026-10-02
 
 ### Fixed

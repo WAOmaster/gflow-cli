@@ -78,6 +78,22 @@ def _unmoved(world: dict[str, Any]) -> None:
     world["hop"] = False  # the labs bootstrap URL stays; the composer navigates itself
 
 
+@given("every record Flow replies with has null in its fourth slot")
+def _null_slot_3(world: dict[str, Any]) -> None:
+    # Measured 2026-10-06 (spike_948_submit_envelope.py): YhhmEf and jwpduf records
+    # are unchanged except slot 3, "CAE" -> null.
+    def rec(status: int, url: str | None = None) -> list[Any]:
+        r = _record(status, url) if url else _record(status)
+        r[3] = None
+        return r
+
+    world["page"].scripted_responses = [
+        (_batch_url("YhhmEf"), _frame("YhhmEf", [None, 881, [[MEDIA]], [[rec(6)]]])),
+        (_batch_url("jwpduf"), _frame("jwpduf", [None, 881, [[rec(2)]]])),
+        (_batch_url("as29s"), _frame("as29s", rec(3, VIDEO_URL))),
+    ]
+
+
 @given("GFLOW_CLI_FLOW_HOST is labs.google")
 def _kill_switch(world: dict[str, Any]) -> None:
     world["set_flow_host"]("labs.google")
