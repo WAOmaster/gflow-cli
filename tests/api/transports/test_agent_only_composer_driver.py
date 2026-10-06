@@ -766,6 +766,8 @@ async def test_unported_image_forms_are_refused(request_: Any) -> None:
         {"count": 2},
         {"aspect": video_api.Aspect.SQUARE},
         {"reference_entities": ("e1",)},
+        # The agent pane has no resolution control: driving on would silently drop it.
+        {"resolution": "720p"},
     ],
 )
 async def test_unported_video_forms_are_refused(changes: dict[str, Any]) -> None:

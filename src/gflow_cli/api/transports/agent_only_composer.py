@@ -669,6 +669,8 @@ def _unported_video(request: GenerateVideoRequest) -> str | None:
         return f"the {request.aspect.value} aspect ratio"
     if request.model is not None and request.model not in VIDEO_MODEL_MENU_MATCHERS:
         return f"the {request.model.value} model"
+    if request.resolution is not None:
+        return "an explicit resolution"
     return None
 
 
