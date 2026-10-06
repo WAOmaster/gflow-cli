@@ -186,6 +186,8 @@ def _two_three_four(world: dict[str, Any]) -> None:
     for path in paths:
         width, height = _image_size(path)
         assert abs(width / height - 3 / 4) < 0.02, f"{path.name}: {width}x{height}"
+        # The tile shows a 512-px /asb/ preview; the download must be the original size.
+        assert max(width, height) > 512, f"{path.name}: {width}x{height} is the preview"
 
 
 @then("the run restored the Agent-settings defaults")
